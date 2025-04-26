@@ -1,19 +1,54 @@
 # PROJECT MEDICO:
-Medico – Simple Medical Query Assistant
-Medico is a web-based medical assistant that allows users to input simple health queries and receive AI-generated advice. It integrates with the Google AI Gemini API to generate human-friendly, accurate medical responses. The tool also allows users to provide their medical background for more personalized suggestions.
 
--->🔧 Features<--
-🧠 AI-powered medical query response using Google Gemini API
-📝 Input for user's medical background to enhance result accuracy
-💬 Neatly formatted and user-friendly response area
-🎨 Clean and responsive UI built with HTML, CSS, and JavaScript
+Medico is a lightweight, web-based medical assistance tool that helps users get simple and easy-to-understand medical advice. It also allows users to scan the backside of a medicine tablet and fetch medical information using OCR (Optical Character Recognition) and AI.
 
- -->How It Works<--
-*Enter your medical query (e.g., "headache and nausea").
-*Optionally, add your medical background (e.g., "diabetic, 45 years old").
-*Click Get Advice.
-*The system sends the input to Google Gemini and displays the formatted response.
+✨ Features
+Medical Query AI:
+Enter a health-related question and get AI-generated simple advice.
 
--->🛡 Disclaimer<--
-This project is for educational and informational purposes only. It is not a substitute for professional medical advice, diagnosis, or treatment. Always consult a licensed healthcare provider for serious health concerns.
+Scan Medicine Tablet (OCR):
+Upload a picture of the tablet’s backside, extract the text (medicine name), and receive relevant medical information including use cases, side effects, and precautions.
+
+Multi-language Support for Voice Output:
+After scanning a tablet, the extracted information is spoken aloud in your selected language (English, Hindi, Tamil, Telugu, Bengali).
+
+🛠️ Built With
+Frontend: HTML, CSS, JavaScript
+
+OCR Library: Tesseract.js
+
+AI Backend: Google Gemini AI API (v1beta - Flash Model)
+
+Text-to-Speech API: Web Speech API
+
+📦 Project Structure
+cpp
+Copy
+Edit
+├── index.html   // Main HTML file
+├── style.css    // Styling for the project
+├── script.js    // JavaScript logic (query handling, OCR, AI integration, voice output)
+⚙️ How to Run Locally
+Clone or download this repository.
+
+Open the index.html file in any modern web browser (Chrome, Edge, Firefox).
+
+Make sure you have a valid Google AI Studio API key (update it in script.js at the API_KEY variable).
+
+Start using Medico for medical queries and tablet scanning!
+
+📸 Screenshots
+Add screenshots here if needed to show how the tool looks in action!
+
+🤝 Contributing
+Feel free to fork the repository and submit pull requests for improvements like:
+
+Adding more language support.
+
+Enhancing UI/UX.
+
+Improving medical data fetching reliability.
+
+📄 License
+This project is licensed under the MIT License.
 
