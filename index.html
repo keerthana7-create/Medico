@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.0.2/dist/tesseract.min.js"></script>
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Medico - Your Medical Assistant</title>
@@ -8,17 +10,33 @@
 </head>
 <body>
     <div class="container">
-        <h1>Medico - Your Medical Assistant</h1>
-
-        <div class="section">
-            <textarea id="medicalBackground" placeholder="Enter your medical background (optional)..."></textarea>
-            <input type="text" id="queryInput" placeholder="Enter your medical query...">
-            <button id="queryButton">Get Medical Advice</button>
-        </div>
-
+      <h1 class="header-title">💊 Medico - Your Medical Assistant</h1>
+  
+      <div class="card">
+        <h2>Medical Query</h2>
+        <textarea id="medicalBackground" placeholder="Enter your medical background (optional)..."></textarea>
+        <input type="text" id="queryInput" placeholder="Enter your medical query...">
+        <button id="queryButton">Get Medical Advice</button>
         <div id="responseContainer"></div>
+      </div>
+  
+      <hr>
+  
+      <div class="card">
+        <h2>📷 Scan Tablet Backside</h2>
+        <input type="file" id="imageInput" accept="image/*">
+        <select id="languageSelect">
+          <option value="en">English</option>
+          <option value="hi">Hindi</option>
+          <option value="ta">Tamil</option>
+          <option value="te">Telugu</option>
+          <option value="bn">Bengali</option>
+        </select>
+        <button id="scanButton">Scan & Speak</button>
+        <div id="ocrResult"></div>
+      </div>
     </div>
-
+  
     <script src="script.js"></script>
-</body>
+  </body> 
 </html>
