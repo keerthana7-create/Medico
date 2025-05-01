@@ -1,54 +1,76 @@
 # PROJECT MEDICO:
 
-Medico is a lightweight, web-based medical assistance tool that helps users get simple and easy-to-understand medical advice. It also allows users to scan the backside of a medicine tablet and fetch medical information using OCR (Optical Character Recognition) and AI.
+💊 Medico - Personalized Healthcare Assistant
+Medico is a web-based medical assistant that empowers users to get personalized AI-driven medical advice and tablet information using Optical Character Recognition (OCR). It’s designed with accessibility in mind — including multi-language voice output — to help even illiterate users understand medicine details clearly.
 
-✨ Features
-Medical Query AI:
-Enter a health-related question and get AI-generated simple advice.
+🚀 Features
+👤 Patient Profile
+Users can enter and save their age, sex, and medical background.
 
-Scan Medicine Tablet (OCR):
-Upload a picture of the tablet’s backside, extract the text (medicine name), and receive relevant medical information including use cases, side effects, and precautions.
+Personal information is stored locally in the browser using localStorage.
 
-Multi-language Support for Voice Output:
-After scanning a tablet, the extracted information is spoken aloud in your selected language (English, Hindi, Tamil, Telugu, Bengali).
+💬 Medical Query (AI Assistant)
+Users ask health-related questions.
+
+AI provides customized advice considering the user’s profile.
+
+Responses include warnings, side effects, dosage, uses, and more.
+
+📷 Tablet Scanner with OCR + AI
+Users upload a picture of the backside of a medicine tablet.
+
+Tesseract.js extracts the tablet name.
+
+Gemini AI provides a short, safe summary of the medicine.
+
+Info is spoken aloud in the selected language (Hindi, Tamil, Telugu, Bengali, or English).
+
+🔊 Voice Output for Accessibility
+Speaks responses using SpeechSynthesisUtterance.
+
+Ideal for illiterate or visually impaired users.
+
+⚠️ Built-in Safety
+Personalized warnings shown if a tablet is not suitable for a user's age/health.
+
+Disclaimer messages always included.
 
 🛠️ Built With
 Frontend: HTML, CSS, JavaScript
 
-OCR Library: Tesseract.js
+AI Backend: Google Gemini API (gemini-2.0-flash)
 
-AI Backend: Google Gemini AI API (v1beta - Flash Model)
+OCR Engine: Tesseract.js
 
-Text-to-Speech API: Web Speech API
+Voice API: Web Speech API (Browser-native)
 
-📦 Project Structure
-cpp
+📁 Project Structure
+bash
 Copy
 Edit
-├── index.html   // Main HTML file
-├── style.css    // Styling for the project
-├── script.js    // JavaScript logic (query handling, OCR, AI integration, voice output)
-⚙️ How to Run Locally
-Clone or download this repository.
+├── index.html         # UI layout
+├── style.css          # Responsive and clean styling
+├── script.js          # Main logic (AI, OCR, voice, input handling)
+Screenshots
+(You can include screenshots here of the form, output, and OCR working.)
 
-Open the index.html file in any modern web browser (Chrome, Edge, Firefox).
+✅ Future Improvements (Suggestions)
+Enable true multilingual OCR using dynamic language selection for Tesseract.js
 
-Make sure you have a valid Google AI Studio API key (update it in script.js at the API_KEY variable).
+Add offline support using service workers
 
-Start using Medico for medical queries and tablet scanning!
+Improve UI for mobile users
 
-📸 Screenshots
-Add screenshots here if needed to show how the tool looks in action!
+Add real medicine database validation
 
-🤝 Contributing
-Feel free to fork the repository and submit pull requests for improvements like:
+📜 License
+This project is released under the MIT License.
+Free to use, modify, and distribute.
 
-Adding more language support.
+👩‍⚕️ Disclaimer
+Medico is not a certified medical diagnostic tool.
+Information provided is for educational and informational purposes only.
+Always consult a licensed healthcare provider before taking any medicine.
 
-Enhancing UI/UX.
 
-Improving medical data fetching reliability.
-
-📄 License
-This project is licensed under the MIT License.
 
