@@ -4,6 +4,7 @@
 Medico is a web-based medical assistant that empowers users to get personalized AI-driven medical advice and tablet information using Optical Character Recognition (OCR). It’s designed with accessibility in mind — including multi-language voice output — to help even illiterate users understand medicine details clearly.
 
 🚀 Features
+
 -->👤 Patient Profile
 Users can enter and save their age, sex, and medical background.
 
@@ -29,6 +30,7 @@ Info is spoken aloud in the selected language (Hindi, Tamil, Telugu, Bengali, or
 Speaks responses using SpeechSynthesisUtterance.
 
 Ideal for illiterate or visually impaired users.
+
 -->🔗 **Live Demo:** [Click to View Medico AI](https://keerthana7-create.github.io/Medico/)
 
 
