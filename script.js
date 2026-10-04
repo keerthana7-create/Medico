@@ -258,20 +258,39 @@ async function callGeminiAPI(contentsArray) {
         throw new Error("API Key missing. Please save your Gemini API key in the modal");
     }
 
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${userKey}`;
+    // List of candidate models to try in order
+    const candidateModels = [
+        "gemini-2.5-flash",
+        "gemini-2.0-flash",
+        "gemini-1.5-flash",
+        "gemini-1.5-pro",
+        "gemini-1.5-flash-8b"
+    ];
 
-    const res = await fetch(geminiUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contents: contentsArray })
-    });
+    let lastErrorMessage = "";
 
-    if (!res.ok) {
-        const errJson = await res.json();
-        throw new Error(errJson.error?.message || "Gemini API request failed.");
+    for (const model of candidateModels) {
+        try {
+            const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${userKey}`;
+            const res = await fetch(geminiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ contents: contentsArray })
+            });
+
+            const resJson = await res.json();
+            if (res.ok && resJson.candidates) {
+                return resJson;
+            } else {
+                lastErrorMessage = resJson.error?.message || `Model ${model} failed`;
+                console.warn(`Model ${model} error:`, lastErrorMessage);
+            }
+        } catch (err) {
+            lastErrorMessage = err.message;
+        }
     }
 
-    return await res.json();
+    throw new Error(lastErrorMessage || "Failed to reach Gemini models. Please verify your API key.");
 }
 
 // --- 5. TEXT-TO-SPEECH (REGIONAL VOICE READOUT) ---

@@ -25,16 +25,34 @@ export default async function handler(req, res) {
   }
 
   try {
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+    const candidateModels = [
+      "gemini-2.5-flash",
+      "gemini-2.0-flash",
+      "gemini-1.5-flash",
+      "gemini-1.5-pro",
+      "gemini-1.5-flash-8b"
+    ];
 
-    const geminiResponse = await fetch(geminiUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(req.body)
-    });
+    let lastData = null;
+    let lastStatus = 500;
 
-    const data = await geminiResponse.json();
-    return res.status(geminiResponse.status).json(data);
+    for (const model of candidateModels) {
+      const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+      const geminiResponse = await fetch(geminiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(req.body)
+      });
+
+      lastStatus = geminiResponse.status;
+      lastData = await geminiResponse.json();
+
+      if (geminiResponse.ok && lastData.candidates) {
+        return res.status(200).json(lastData);
+      }
+    }
+
+    return res.status(lastStatus).json(lastData);
   } catch (error) {
     console.error("Vercel Proxy Error:", error);
     return res.status(500).json({ error: error.message || 'Internal Server Error' });
