@@ -2,17 +2,22 @@
 const ageInput = document.getElementById("ageInput");
 const sexInput = document.getElementById("sexInput");
 const medicalBackground = document.getElementById("medicalBackground");
+const allergiesInput = document.getElementById("allergiesInput");
 const saveInfoButton = document.getElementById("saveInfoButton");
 const clearInfoButton = document.getElementById("clearInfoButton");
 
-const imageInput = document.getElementById("imageInput");
+const tabButtons = document.querySelectorAll(".tab-btn");
 const uploadArea = document.getElementById("uploadArea");
+const imageInput = document.getElementById("imageInput");
 const uploadPlaceholder = document.getElementById("uploadPlaceholder");
 const previewContainer = document.getElementById("previewContainer");
 const imagePreview = document.getElementById("imagePreview");
 const removeImageBtn = document.getElementById("removeImageBtn");
 
+const queryLabel = document.getElementById("queryLabel");
 const userQuery = document.getElementById("userQuery");
+const micBtn = document.getElementById("micBtn");
+const micStatusText = document.getElementById("micStatusText");
 const languageSelect = document.getElementById("languageSelect");
 const analyzeButton = document.getElementById("analyzeButton");
 
@@ -30,10 +35,13 @@ const customApiKey = document.getElementById("customApiKey");
 const saveApiKeyBtn = document.getElementById("saveApiKeyBtn");
 const clearApiKeyBtn = document.getElementById("clearApiKeyBtn");
 
+let currentMode = "symptom"; // 'symptom' | 'medicine' | 'scan'
 let isProfileEditing = false;
 let currentBase64Image = null;
 let currentImageMimeType = null;
 let lastSpeechUtterance = null;
+let isRecordingVoice = false;
+let speechRecognition = null;
 
 // --- 1. PATIENT PROFILE MANAGEMENT ---
 window.addEventListener("DOMContentLoaded", () => {
@@ -42,6 +50,7 @@ window.addEventListener("DOMContentLoaded", () => {
         ageInput.value = savedInfo.age || "";
         sexInput.value = savedInfo.sex || "";
         medicalBackground.value = savedInfo.medicalBackground || "";
+        if (allergiesInput) allergiesInput.value = savedInfo.allergies || "";
         disableProfileInputs();
         saveInfoButton.textContent = "Edit Profile";
         isProfileEditing = false;
@@ -51,6 +60,8 @@ window.addEventListener("DOMContentLoaded", () => {
     if (savedKey) {
         customApiKey.value = savedKey;
     }
+
+    initSpeechRecognition();
 });
 
 saveInfoButton.addEventListener("click", () => {
@@ -60,30 +71,32 @@ saveInfoButton.addEventListener("click", () => {
         isProfileEditing = true;
     } else {
         if (!ageInput.value || !sexInput.value) {
-            showToast("Please enter your age and select your sex.");
+            showToast("Please enter age and select gender in Patient Profile.");
             return;
         }
 
         const profileData = {
             age: ageInput.value,
             sex: sexInput.value,
-            medicalBackground: medicalBackground.value
+            medicalBackground: medicalBackground.value,
+            allergies: allergiesInput ? allergiesInput.value : ""
         };
 
         localStorage.setItem("medico_patient_profile", JSON.stringify(profileData));
         disableProfileInputs();
         saveInfoButton.textContent = "Edit Profile";
         isProfileEditing = false;
-        showToast("Patient profile saved!");
+        showToast("Patient health profile saved!");
     }
 });
 
 clearInfoButton.addEventListener("click", () => {
-    if (confirm("Clear saved patient profile?")) {
+    if (confirm("Clear your saved health profile?")) {
         localStorage.removeItem("medico_patient_profile");
         ageInput.value = "";
         sexInput.value = "";
         medicalBackground.value = "";
+        if (allergiesInput) allergiesInput.value = "";
         enableProfileInputs();
         saveInfoButton.textContent = "Save Profile";
         isProfileEditing = true;
@@ -95,18 +108,109 @@ function disableProfileInputs() {
     ageInput.disabled = true;
     sexInput.disabled = true;
     medicalBackground.disabled = true;
+    if (allergiesInput) allergiesInput.disabled = true;
 }
 
 function enableProfileInputs() {
     ageInput.disabled = false;
     sexInput.disabled = false;
     medicalBackground.disabled = false;
+    if (allergiesInput) allergiesInput.disabled = false;
 }
 
-// --- 2. IMAGE UPLOAD & BASE64 CONVERSION ---
-imageInput.addEventListener("change", handleImageUpload);
+// --- 2. MODE TABS SWITCHING ---
+tabButtons.forEach(btn => {
+    btn.addEventListener("click", () => {
+        tabButtons.forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        currentMode = btn.getAttribute("data-mode");
 
-function handleImageUpload(e) {
+        if (currentMode === "symptom") {
+            uploadArea.classList.add("hidden");
+            queryLabel.textContent = "Describe your symptoms or health query:";
+            userQuery.placeholder = "e.g. I have a persistent dry cough and mild fever for 2 days, what could it be?";
+        } else if (currentMode === "medicine") {
+            uploadArea.classList.add("hidden");
+            queryLabel.textContent = "Enter medicine name to check safety, uses & dosage:";
+            userQuery.placeholder = "e.g. Rosuvas, Metformin 500mg, Paracetamol, Amoxicillin...";
+        } else if (currentMode === "scan") {
+            uploadArea.classList.remove("hidden");
+            queryLabel.textContent = "Optional notes or questions about this prescription/report:";
+            userQuery.placeholder = "e.g. Explain how to take these medications and check for any conflicts with my health history.";
+        }
+    });
+});
+
+// --- 3. VOICE INPUT (SPEECH-TO-TEXT) ---
+function initSpeechRecognition() {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SpeechRecognition) {
+        speechRecognition = new SpeechRecognition();
+        speechRecognition.continuous = false;
+        speechRecognition.interimResults = false;
+
+        speechRecognition.onstart = () => {
+            isRecordingVoice = true;
+            micBtn.classList.add("recording");
+            micStatusText.textContent = "Listening...";
+            showToast("🎙️ Listening... Speak now.");
+        };
+
+        speechRecognition.onresult = (event) => {
+            const transcript = event.results[0][0].transcript;
+            userQuery.value = (userQuery.value ? userQuery.value + " " : "") + transcript;
+            showToast("Voice captured!");
+        };
+
+        speechRecognition.onerror = (event) => {
+            console.warn("Speech recognition error:", event.error);
+            showToast("Voice input error: " + event.error);
+            stopVoiceRecording();
+        };
+
+        speechRecognition.onend = () => {
+            stopVoiceRecording();
+        };
+    } else {
+        micBtn.style.display = "none";
+    }
+}
+
+micBtn.addEventListener("click", () => {
+    if (!speechRecognition) {
+        showToast("Voice recognition not supported in your browser.");
+        return;
+    }
+
+    if (isRecordingVoice) {
+        speechRecognition.stop();
+        stopVoiceRecording();
+    } else {
+        // Set speech recognition language based on dropdown
+        const selectedLang = languageSelect.value;
+        if (selectedLang.includes("Telugu")) speechRecognition.lang = "te-IN";
+        else if (selectedLang.includes("Hindi")) speechRecognition.lang = "hi-IN";
+        else if (selectedLang.includes("Tamil")) speechRecognition.lang = "ta-IN";
+        else if (selectedLang.includes("Kannada")) speechRecognition.lang = "kn-IN";
+        else if (selectedLang.includes("Malayalam")) speechRecognition.lang = "ml-IN";
+        else if (selectedLang.includes("Bengali")) speechRecognition.lang = "bn-IN";
+        else if (selectedLang.includes("Marathi")) speechRecognition.lang = "mr-IN";
+        else if (selectedLang.includes("Gujarati")) speechRecognition.lang = "gu-IN";
+        else if (selectedLang.includes("Spanish")) speechRecognition.lang = "es-ES";
+        else speechRecognition.lang = "en-IN";
+
+        speechRecognition.start();
+    }
+});
+
+function stopVoiceRecording() {
+    isRecordingVoice = false;
+    micBtn.classList.remove("recording");
+    micStatusText.textContent = "Voice Input";
+}
+
+// --- 4. IMAGE UPLOAD (PRESCRIPTION SCANNER) ---
+imageInput.addEventListener("change", (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
@@ -116,17 +220,15 @@ function handleImageUpload(e) {
     reader.onload = function (event) {
         const fullBase64 = event.target.result;
         imagePreview.src = fullBase64;
-        
-        // Extract raw base64 string without data:image/png;base64, header
         currentBase64Image = fullBase64.split(',')[1];
 
         uploadPlaceholder.classList.add("hidden");
         previewContainer.classList.remove("hidden");
-        showToast("Prescription image loaded.");
+        showToast("Prescription/report image loaded.");
     };
 
     reader.readAsDataURL(file);
-}
+});
 
 removeImageBtn.addEventListener("click", (e) => {
     e.stopPropagation();
@@ -138,7 +240,7 @@ removeImageBtn.addEventListener("click", (e) => {
     uploadPlaceholder.classList.remove("hidden");
 });
 
-// --- 3. API KEY MODAL LOGIC ---
+// --- 5. API KEY MODAL LOGIC ---
 apiKeyModalBtn.addEventListener("click", () => apiModal.classList.remove("hidden"));
 closeModalBtn.addEventListener("click", () => apiModal.classList.add("hidden"));
 
@@ -146,7 +248,7 @@ saveApiKeyBtn.addEventListener("click", () => {
     const key = customApiKey.value.trim();
     if (key) {
         localStorage.setItem("MEDICO_GEMINI_KEY", key);
-        showToast("Gemini API key saved to browser.");
+        showToast("Gemini API key saved.");
         apiModal.classList.add("hidden");
     } else {
         showToast("Please enter a valid key.");
@@ -160,21 +262,22 @@ clearApiKeyBtn.addEventListener("click", () => {
     apiModal.classList.add("hidden");
 });
 
-// --- 4. ANALYZE & REGIONAL TRANSLATION LOGIC ---
+// --- 6. AI ANALYSIS & SAFETY CHECK LOGIC ---
 analyzeButton.addEventListener("click", async () => {
-    const age = ageInput.value;
-    const sex = sexInput.value;
-    const background = medicalBackground.value;
+    const age = ageInput.value.trim();
+    const sex = sexInput.value.trim();
+    const background = medicalBackground.value.trim();
+    const allergies = allergiesInput ? allergiesInput.value.trim() : "";
     const queryText = userQuery.value.trim();
     const selectedLang = languageSelect.value;
 
     if (!age || !sex) {
-        showToast("Please complete Step 1: Patient Profile (Age & Sex).");
+        showToast("Please fill in your Patient Profile (Age & Gender) first.");
         return;
     }
 
-    if (!currentBase64Image && !queryText) {
-        showToast("Please either upload a prescription/report photo or type a health question.");
+    if (!queryText && !currentBase64Image) {
+        showToast("Please enter symptoms/medicine or upload a prescription image.");
         return;
     }
 
@@ -182,25 +285,42 @@ analyzeButton.addEventListener("click", async () => {
     resultCard.classList.remove("hidden");
     loadingContainer.classList.remove("hidden");
     outputContent.innerHTML = "";
-    loadingStatusText.textContent = `Analyzing medical document & generating response in ${selectedLang}...`;
+    loadingStatusText.textContent = `Evaluating safety for ${sex} (${age} yrs) & translating to ${selectedLang}...`;
     resultCard.scrollIntoView({ behavior: "smooth" });
 
-    // Prepare Multimodal Payload
+    // Comprehensive Structured Medical Prompt
     const promptInstructions = `
-You are Medico, an expert medical AI assistant.
-Patient Information:
+You are MEDICO, an advanced AI Clinical Healthcare & Pharmacological Safety Assistant.
+
+PATIENT PROFILE:
 - Age: ${age}
-- Sex: ${sex}
-- Medical Background/Allergies: ${background || "None specified"}
+- Gender: ${sex}
+- Medical History / Existing Conditions: ${background || "None declared"}
+- Known Drug Allergies / Sensitivities: ${allergies || "None declared"}
 
-User Query/Notes: ${queryText || "Extract details from the attached prescription/report photo."}
+MODE: ${currentMode.toUpperCase()}
+USER QUERY / MEDICINE / SYMPTOMS: "${queryText || "Extract and analyze prescription image."}"
 
-CRITICAL TASK:
-1. Examine the provided patient profile and attached prescription/lab report image (if provided).
-2. Identify medications, dosages, purpose, diagnostic findings, key precautions, and dietary advice.
-3. Translate and format your entire response clearly in the selected language: **${selectedLang}**.
-4. Organize the output cleanly into easy-to-read sections using Markdown formatting with clear bullet points.
-    `;
+CRITICAL SAFETY & MEDICAL INSTRUCTIONS:
+1. **CRITICAL HEALTH & SAFETY AUDIT (MANDATORY)**:
+   - Carefully evaluate if the searched medicine or symptoms present any **SEVERE RISKS, CONTRAINDICATIONS, OR HARMFUL DRUG INTERACTIONS** with the patient's existing background (e.g., Hypertension, Diabetes, Heart Stroke, Asthma, Kidney issues) or allergies.
+   - If there is a potential risk or conflict, display a **PROMINENT WARNING MESSAGE** right at the top.
+
+2. **COMPREHENSIVE STRUCTURED BREAKDOWN**:
+   - 🩺 **Clinical Overview / Diagnosis Guidance**: What the symptoms/medicine indicates.
+   - 💊 **Medicine Details (if medicine query or prescription)**:
+     - **Primary Uses & Mechanism**
+     - **Timing & Gap Between Doses** (e.g. interval hours, before/after meals, food/beverage restrictions).
+     - **Dosage Guidelines & Limits**
+     - **Side Effects & Red Flags** (Common vs Emergency symptoms).
+     - **Approximate Price Range & Generic Alternatives** (e.g. India generic vs branded pricing where applicable).
+   - 🌿 **Lifestyle & Home Care Guidance**
+   - 🚨 **When to See an Emergency Doctor**
+
+3. **LANGUAGE TRANSLATION (STRICT)**:
+   - Provide the ENTIRE detailed assessment translated accurately into **${selectedLang}**.
+   - Use clean Markdown formatting with clear headers, bold keys, and bullet points.
+`;
 
     const contentsArray = [];
     const partsArray = [{ text: promptInstructions }];
@@ -218,25 +338,28 @@ CRITICAL TASK:
 
     try {
         const responseData = await callGeminiAPI(contentsArray);
-        
         loadingContainer.classList.add("hidden");
 
         if (responseData && responseData.candidates && responseData.candidates[0].content.parts[0].text) {
             const rawMarkdown = responseData.candidates[0].content.parts[0].text;
             outputContent.innerHTML = formatMarkdownToHTML(rawMarkdown);
-            showToast("Analysis complete!");
+            showToast("Medical analysis complete!");
         } else {
-            outputContent.innerHTML = `<p class="error-msg">⚠️ Unable to extract information. Please check image clarity or try again.</p>`;
+            outputContent.innerHTML = `<p class="health-alert-warning">⚠️ No assessment generated. Please check your query or image clarity and try again.</p>`;
         }
     } catch (error) {
         loadingContainer.classList.add("hidden");
-        outputContent.innerHTML = `<p class="error-msg">❌ Error: ${error.message}. Please click 'API Settings' to enter a valid key if hosting on GitHub Pages.</p>`;
+        outputContent.innerHTML = `
+            <div class="health-alert-danger">
+                ${error.message}
+            </div>
+        `;
     }
 });
 
-// Dispatch request to Vercel Serverless proxy OR direct Gemini API
+// Multi-Model Dispatcher
 async function callGeminiAPI(contentsArray) {
-    // 1. Try Vercel Serverless Function Proxy first
+    // 1. Try Vercel Serverless Proxy
     try {
         const proxyRes = await fetch('/api/extract', {
             method: 'POST',
@@ -248,17 +371,16 @@ async function callGeminiAPI(contentsArray) {
             return await proxyRes.json();
         }
     } catch (e) {
-        console.log("Serverless proxy not available, checking client-side key...");
+        // Proxy not running on GitHub Pages
     }
 
-    // 2. Fallback to client-side API Key stored in localStorage
+    // 2. Client-side Key from LocalStorage
     let userKey = localStorage.getItem("MEDICO_GEMINI_KEY");
     if (!userKey) {
         apiModal.classList.remove("hidden");
-        throw new Error("API Key missing. Please save your Gemini API key in the modal");
+        throw new Error("🔑 Gemini API key missing. Please paste your free key in the API Settings modal above.");
     }
 
-    // List of candidate models to try in order
     const candidateModels = [
         "gemini-2.5-flash",
         "gemini-2.0-flash",
@@ -284,8 +406,6 @@ async function callGeminiAPI(contentsArray) {
                 return resJson;
             } else {
                 lastErrorMessage = resJson.error?.message || `Model ${model} failed`;
-                console.warn(`Model ${model} error:`, lastErrorMessage);
-                // If key is invalid or unauthenticated, pop open modal immediately
                 if (resJson.error?.status === "UNAUTHENTICATED" || resJson.error?.message?.includes("API key")) {
                     localStorage.removeItem("MEDICO_GEMINI_KEY");
                     customApiKey.value = "";
@@ -299,30 +419,28 @@ async function callGeminiAPI(contentsArray) {
         }
     }
 
-    // If all models failed with 404, it means the API key is expired/invalid
     localStorage.removeItem("MEDICO_GEMINI_KEY");
     customApiKey.value = "";
     apiModal.classList.remove("hidden");
-    throw new Error("🔑 Your saved API key has expired or is invalid. The API Settings modal has opened — please paste a fresh free API key from Google AI Studio.");
+    throw new Error("🔑 Saved API key is expired or invalid. Please paste a fresh free API key from Google AI Studio into the API Settings modal.");
 }
 
-// --- 5. TEXT-TO-SPEECH (REGIONAL VOICE READOUT) ---
+// --- 7. TEXT-TO-SPEECH (REGIONAL VOICE READOUT) ---
 speechBtn.addEventListener("click", () => {
     const textToRead = outputContent.innerText;
     if (!textToRead) return;
 
     if ('speechSynthesis' in window) {
-        window.speechSynthesis.cancel(); // Stop any existing speech
+        window.speechSynthesis.cancel();
 
         lastSpeechUtterance = new SpeechSynthesisUtterance(textToRead);
-        
-        // Select accent based on selected language
-        const voices = window.speechSynthesis.getVoices();
         const selectedLang = languageSelect.value;
 
-        if (selectedLang.includes("Hindi")) lastSpeechUtterance.lang = "hi-IN";
+        if (selectedLang.includes("Telugu")) lastSpeechUtterance.lang = "te-IN";
+        else if (selectedLang.includes("Hindi")) lastSpeechUtterance.lang = "hi-IN";
         else if (selectedLang.includes("Tamil")) lastSpeechUtterance.lang = "ta-IN";
-        else if (selectedLang.includes("Telugu")) lastSpeechUtterance.lang = "te-IN";
+        else if (selectedLang.includes("Kannada")) lastSpeechUtterance.lang = "kn-IN";
+        else if (selectedLang.includes("Malayalam")) lastSpeechUtterance.lang = "ml-IN";
         else if (selectedLang.includes("Bengali")) lastSpeechUtterance.lang = "bn-IN";
         else if (selectedLang.includes("Marathi")) lastSpeechUtterance.lang = "mr-IN";
         else if (selectedLang.includes("Gujarati")) lastSpeechUtterance.lang = "gu-IN";
@@ -330,7 +448,7 @@ speechBtn.addEventListener("click", () => {
         else lastSpeechUtterance.lang = "en-IN";
 
         window.speechSynthesis.speak(lastSpeechUtterance);
-        showToast("Reading aloud in " + selectedLang + "...");
+        showToast("🔊 Reading report aloud in " + selectedLang + "...");
     } else {
         showToast("Text-to-speech not supported in this browser.");
     }
@@ -342,32 +460,33 @@ copyBtn.addEventListener("click", () => {
     if (!text) return;
 
     navigator.clipboard.writeText(text).then(() => {
-        showToast("Report copied to clipboard!");
+        showToast("Assessment copied to clipboard!");
     });
 });
 
-// Simple Markdown to HTML Formatter
+// Markdown Formatter
 function formatMarkdownToHTML(md) {
     let html = md
         .replace(/^### (.*$)/gim, '<h3>$1</h3>')
         .replace(/^## (.*$)/gim, '<h2>$1</h2>')
         .replace(/^# (.*$)/gim, '<h1>$1</h1>')
-        .replace(/\*\*(.* vast)\*\*/gim, '<strong>$1</strong>')
         .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
         .replace(/\*(.*?)\*/g, '<em>$1</em>')
         .replace(/^\- (.*$)/gim, '<li>$1</li>')
         .replace(/^\* (.*$)/gim, '<li>$1</li>')
         .replace(/\n\n/g, '<br><br>');
 
+    // Wrap list items
+    html = html.replace(/(<li>[\s\S]*?<\/li>)/g, '<ul>$1</ul>');
     return html;
 }
 
-// Toast Helper
+// Toast Notification
 function showToast(message) {
     const toast = document.getElementById("toast");
     toast.textContent = message;
     toast.classList.remove("hidden");
     setTimeout(() => {
         toast.classList.add("hidden");
-    }, 3500);
+    }, 4000);
 }

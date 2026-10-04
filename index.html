@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Medico - Personalized Medical & Prescription Assistant</title>
+    <title>MEDICO - AI Personalized Medical & Prescription Assistant</title>
     <!-- Tesseract OCR fallback -->
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.0.2/dist/tesseract.min.js"></script>
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=5.0">
 </head>
 <body>
 
@@ -18,9 +18,9 @@
     <header class="app-header">
         <div class="header-container">
             <div class="logo">
-                <span class="logo-icon">💊</span>
-                <span class="logo-text">Medico</span>
-                <span class="badge">AI Health Assistant</span>
+                <span class="logo-icon">🩺</span>
+                <span class="logo-text">MEDICO</span>
+                <span class="badge">AI Health & Safety Assistant</span>
             </div>
             <div class="header-actions">
                 <button id="apiKeyModalBtn" class="btn btn-secondary">
@@ -34,33 +34,38 @@
         
         <!-- Welcome Hero Banner -->
         <div class="hero-card">
-            <h1>Healthcare Insights in Your Language</h1>
-            <p>Upload medical reports, prescriptions, or ask health queries. Get instant simplified explanations in your preferred regional language.</p>
+            <h1>Personalized Healthcare, Medicine Safety & Guidance</h1>
+            <p>Enter symptoms, search medicines, or upload prescriptions. Medico verifies medication safety against your health profile and provides clear explanations in your regional language.</p>
         </div>
 
         <!-- 1. Patient Profile Card -->
-        <div class="card">
+        <div class="card profile-card">
             <div class="card-header">
-                <h2>👤 Patient Profile</h2>
-                <span class="step-tag">Step 1</span>
+                <h2>👤 Patient Health Profile</h2>
+                <span class="step-tag">Required for Safety Analysis</span>
             </div>
+            <p class="section-desc">Medico uses your profile to flag potential drug contraindications, allergic reactions, and age-specific dosage risks.</p>
             <div class="form-grid">
                 <div class="form-group">
                     <label for="ageInput">Age</label>
-                    <input type="number" id="ageInput" placeholder="e.g. 35" min="1" max="120" required>
+                    <input type="number" id="ageInput" placeholder="e.g. 45" min="1" max="120" required>
                 </div>
                 <div class="form-group">
-                    <label for="sexInput">Sex</label>
+                    <label for="sexInput">Gender</label>
                     <select id="sexInput" required>
-                        <option value="">Select your sex</option>
+                        <option value="">Select Gender</option>
                         <option value="male">Male</option>
                         <option value="female">Female</option>
                         <option value="other">Other</option>
                     </select>
                 </div>
                 <div class="form-group full-width">
-                    <label for="medicalBackground">Existing Conditions / Allergies / Notes</label>
-                    <textarea id="medicalBackground" rows="2" placeholder="e.g. Diabetes, Hypertension, Allergic to Penicillin..."></textarea>
+                    <label for="medicalBackground">Existing Conditions / Past History</label>
+                    <input type="text" id="medicalBackground" placeholder="e.g. Diabetes, Hypertension (High BP), Asthma, Kidney Disease, Stroke">
+                </div>
+                <div class="form-group full-width">
+                    <label for="allergiesInput">Known Drug Allergies / Sensitivities</label>
+                    <input type="text" id="allergiesInput" placeholder="e.g. Penicillin, Sulfa drugs, Aspirin, None">
                 </div>
             </div>
             <div class="card-footer">
@@ -69,21 +74,27 @@
             </div>
         </div>
 
-        <!-- 2. Medical Query & Document Upload Card -->
-        <div class="card">
+        <!-- 2. Medical Query / Medicine Search / Image Scanner Card -->
+        <div class="card query-card">
             <div class="card-header">
-                <h2>📷 Scan Prescription / Medical Report</h2>
-                <span class="step-tag">Step 2</span>
+                <h2>🩺 Symptom Checker, Medicine Search & Prescription Scanner</h2>
             </div>
-            
-            <!-- Upload Box -->
-            <div class="upload-area" id="uploadArea">
+
+            <!-- Mode Selector Tabs -->
+            <div class="mode-tabs">
+                <button class="tab-btn active" data-mode="symptom">🩺 Symptoms & General Query</button>
+                <button class="tab-btn" data-mode="medicine">💊 Medicine Safety & Info</button>
+                <button class="tab-btn" data-mode="scan">📷 Prescription / Report Scanner</button>
+            </div>
+
+            <!-- Upload Area (for Scanner mode) -->
+            <div class="upload-area hidden" id="uploadArea">
                 <input type="file" id="imageInput" accept="image/*" class="file-input">
                 <div class="upload-placeholder" id="uploadPlaceholder">
                     <div class="upload-icon">📄</div>
-                    <h3>Drag & Drop Prescription / Medical Report</h3>
-                    <p>Supported: JPG, PNG, WEBP (Upload clear photo of prescription or lab result)</p>
-                    <button type="button" class="btn btn-secondary upload-btn">Browse File</button>
+                    <h3>Drag & Drop Prescription or Lab Report Photo</h3>
+                    <p>Supports clear photos of doctor notes, prescriptions, and lab test reports</p>
+                    <button type="button" class="btn btn-secondary upload-btn">Choose Image</button>
                 </div>
                 <div class="image-preview-container hidden" id="previewContainer">
                     <img id="imagePreview" alt="Prescription preview">
@@ -91,21 +102,28 @@
                 </div>
             </div>
 
-            <!-- Health Question -->
+            <!-- Query Input Box with Voice Input Button -->
             <div class="form-group margin-top">
-                <label for="userQuery">Or Type Your Health Question / Symptoms</label>
-                <textarea id="userQuery" rows="3" placeholder="e.g. Explain what these medications are for and how to take them, or describe your symptoms..."></textarea>
+                <div class="input-header-row">
+                    <label for="userQuery" id="queryLabel">Describe your symptoms or health query:</label>
+                    <button type="button" id="micBtn" class="btn-mic" title="Click to speak using your microphone">
+                        <span class="mic-icon">🎙️</span> <span id="micStatusText">Voice Input</span>
+                    </button>
+                </div>
+                <div class="query-input-wrapper">
+                    <textarea id="userQuery" rows="3" placeholder="e.g. I have a persistent dry cough and mild fever for 2 days, what could it be?"></textarea>
+                </div>
             </div>
 
             <!-- Regional Language Selector -->
             <div class="form-group margin-top">
-                <label for="languageSelect">🌍 Select Output Regional Language</label>
+                <label for="languageSelect">🌐 Output Regional Language</label>
                 <select id="languageSelect" class="language-dropdown">
                     <option value="English">English</option>
+                    <option value="Telugu (తెలుగు)">Telugu (తెలుగు)</option>
                     <option value="Hindi (हिन्दी)">Hindi (हिन्दी)</option>
                     <option value="Tamil (தமிழ்)">Tamil (தமிழ்)</option>
-                    <option value="Telugu (తెలుగు)">Telugu (తెలుగు)</option>
-                    <option value="Kannada (கன்னட/ಕನ್ನಡ)">Kannada (ಕನ್ನಡ)</option>
+                    <option value="Kannada (ಕನ್ನಡ)">Kannada (ಕನ್ನಡ)</option>
                     <option value="Malayalam (മലയാളം)">Malayalam (മലയാളം)</option>
                     <option value="Bengali (বাংলা)">Bengali (বাংলা)</option>
                     <option value="Marathi (मराठी)">Marathi (मराठी)</option>
@@ -115,23 +133,23 @@
                 </select>
             </div>
 
-            <!-- Action Button -->
+            <!-- Submit Button -->
             <div class="card-footer">
                 <button id="analyzeButton" class="btn btn-accent btn-large">
-                    <span class="btn-icon">⚡</span> Analyze & Translate
+                    <span class="btn-icon">⚡</span> Analyze & Get AI Medical Guidance
                 </button>
             </div>
         </div>
 
-        <!-- 3. AI Analysis Results Card -->
+        <!-- 3. AI Medical Assessment Results -->
         <div class="card hidden" id="resultCard">
             <div class="card-header">
-                <h2>📋 AI Medical Assessment</h2>
+                <h2>📋 AI Medical Assessment & Safety Review</h2>
                 <div class="result-actions">
                     <button id="speechBtn" class="btn btn-secondary btn-sm" title="Listen Aloud">
                         🔊 Listen
                     </button>
-                    <button id="copyBtn" class="btn btn-outline btn-sm" title="Copy Text">
+                    <button id="copyBtn" class="btn btn-outline btn-sm" title="Copy Assessment">
                         📋 Copy
                     </button>
                 </div>
@@ -140,14 +158,15 @@
             <!-- Loading Spinner -->
             <div id="loadingContainer" class="loading-box hidden">
                 <div class="spinner"></div>
-                <p id="loadingStatusText">Analyzing prescription and translating to regional language...</p>
+                <p id="loadingStatusText">Analyzing symptoms, reviewing drug safety against health profile, and translating...</p>
             </div>
 
             <!-- Output Content Area -->
             <div id="outputContent" class="markdown-output"></div>
 
+            <!-- Safety Disclaimer -->
             <div class="disclaimer-banner">
-                ⚠️ <strong>Medical Disclaimer:</strong> Medico is an AI educational assistant, not a doctor. Always consult a certified medical professional before starting, stopping, or altering any medication.
+                ⚠️ <strong>Safety Disclaimer:</strong> MEDICO provides AI-driven educational guidance based on medical data. It is NOT a replacement for a licensed healthcare professional or emergency medical service. Always consult a qualified physician before starting, stopping, or adjusting any medication or treatment plan.
             </div>
         </div>
 
@@ -157,16 +176,18 @@
     <div class="modal-overlay hidden" id="apiModal">
         <div class="modal-card">
             <div class="modal-header">
-                <h3>⚙️ API Key Configuration</h3>
+                <h3>⚙️ Gemini API Configuration</h3>
                 <button id="closeModalBtn" class="close-modal">&times;</button>
             </div>
             <div class="modal-body">
-                <p>Medico automatically uses the <strong>Vercel Serverless proxy</strong> when deployed. If hosting directly on <strong>GitHub Pages</strong>, enter your Gemini API key below:</p>
+                <p>To enable AI medical guidance on GitHub Pages, paste your free Google Gemini API key below:</p>
                 <div class="form-group">
                     <label for="customApiKey">Google Gemini API Key</label>
                     <input type="password" id="customApiKey" placeholder="AIzaSy...">
                 </div>
-                <small>Get a free key from <a href="https://aistudio.google.com/" target="_blank">Google AI Studio</a>. Saved securely in your browser's localStorage.</small>
+                <div class="api-help-box">
+                    <span>👉 Get your free key from <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">Google AI Studio</a> (Free tier, 2 clicks). Key is stored privately in your browser's local storage.</span>
+                </div>
             </div>
             <div class="modal-footer">
                 <button id="saveApiKeyBtn" class="btn btn-primary">Save Key</button>
@@ -178,6 +199,6 @@
     <!-- Toast Notification -->
     <div id="toast" class="toast hidden"></div>
 
-    <script src="script.js?v=4.0"></script>
+    <script src="script.js?v=5.0"></script>
 </body>
 </html>
