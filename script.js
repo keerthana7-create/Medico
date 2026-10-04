@@ -262,9 +262,11 @@ async function callGeminiAPI(contentsArray) {
     const candidateModels = [
         "gemini-2.5-flash",
         "gemini-2.0-flash",
+        "gemini-1.5-flash-latest",
+        "gemini-1.5-pro-latest",
         "gemini-1.5-flash",
         "gemini-1.5-pro",
-        "gemini-1.5-flash-8b"
+        "gemini-pro"
     ];
 
     let lastErrorMessage = "";
@@ -284,13 +286,19 @@ async function callGeminiAPI(contentsArray) {
             } else {
                 lastErrorMessage = resJson.error?.message || `Model ${model} failed`;
                 console.warn(`Model ${model} error:`, lastErrorMessage);
+                // If key is invalid, don't keep trying models
+                if (resJson.error?.status === "UNAUTHENTICATED" || resJson.error?.message?.includes("API key")) {
+                    apiModal.classList.remove("hidden");
+                    throw new Error("API Key invalid or expired. Please enter a fresh key in API Settings.");
+                }
             }
         } catch (err) {
             lastErrorMessage = err.message;
+            if (err.message.includes("API Key invalid")) throw err;
         }
     }
 
-    throw new Error(lastErrorMessage || "Failed to reach Gemini models. Please verify your API key.");
+    throw new Error(lastErrorMessage || "Failed to reach Gemini models. Please verify your API key in API Settings.");
 }
 
 // --- 5. TEXT-TO-SPEECH (REGIONAL VOICE READOUT) ---
