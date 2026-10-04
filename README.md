@@ -1,80 +1,37 @@
-# PROJECT MEDICO:
+# 💊 Medico - Personalized Healthcare & Prescription Assistant
 
-💊 Medico - Personalized Healthcare Assistant
-Medico is a web-based medical assistant that empowers users to get personalized AI-driven medical advice and tablet information using Optical Character Recognition (OCR). It’s designed with accessibility in mind — including multi-language voice output — to help even illiterate users understand medicine details clearly.
+Medico is an AI-powered medical assistant that scans prescription images or reports, analyzes patient profiles, and translates medical explanations into regional languages with voice audio readout.
 
-🚀 Features
+---
 
--->👤 Patient Profile
-Users can enter and save their age, sex, and medical background.
+## 🌟 Key Features
 
-Personal information is stored locally in the browser using localStorage.
+1. **Multimodal Prescription & Report Scanner**: Upload photos of prescriptions or lab reports for automatic analysis using Gemini 1.5 Flash Vision.
+2. **Regional Language Support**: Get detailed medical explanations, dosage instructions, and precautions in **Hindi, Tamil, Telugu, Kannada, Malayalam, Bengali, Marathi, Gujarati, Punjabi, Spanish, or English**.
+3. **Voice Audio Assistant**: Listen to the report read aloud in your native regional accent using Web Speech synthesis.
+4. **Patient Profile Storage**: Save your age, sex, and medical history locally in your browser.
+5. **Secure API Key Handling**:
+   - **Vercel Serverless Function Proxy (`/api/extract`)**: Hides your API key in environment variables so GitHub never revokes it.
+   - **GitHub Pages Fallback**: Includes a built-in API Settings modal to input your API key directly in browser `localStorage`.
 
--->💬 Medical Query (AI Assistant)
-Users ask health-related questions.
+---
 
-AI provides customized advice considering the user’s profile.
+## 🚀 How to Deploy to Vercel (Recommended Permanent Fix)
 
-Responses include warnings, side effects, dosage, uses, and more.
+1. Push this code to your GitHub repository ([`keerthana7-create/Medico`](https://github.com/keerthana7-create/Medico)).
+2. Go to [Vercel](https://vercel.com) and import your `Medico` repository.
+3. Add an Environment Variable:
+   - **Key**: `GEMINI_API_KEY`
+   - **Value**: *(Your free Google AI Studio API key)*
+4. Click **Deploy**.
 
--->📷 Tablet Scanner with OCR + AI
-Users upload a picture of the backside of a medicine tablet.
+---
 
-Tesseract.js extracts the tablet name.
+## 💻 How to Run Locally
 
-Gemini AI provides a short, safe summary of the medicine.
+You can open `index.html` directly in any web browser!
 
-Info is spoken aloud in the selected language (Hindi, Tamil, Telugu, Bengali, or English).
-
--->🔊 Voice Output for Accessibility
-Speaks responses using SpeechSynthesisUtterance.
-
-Ideal for illiterate or visually impaired users.
-
--->🔗 **Live Demo:** [Click to View Medico AI](https://keerthana7-create.github.io/Medico/)
-
-
--->⚠️ Built-in Safety
-Personalized warnings shown if a tablet is not suitable for a user's age/health.
-
-Disclaimer messages always included.
-
--->🛠️ Built With
-Frontend: HTML, CSS, JavaScript
-
-AI Backend: Google Gemini API (gemini-2.0-flash)
-
-OCR Engine: Tesseract.js
-
-Voice API: Web Speech API (Browser-native)
-
--->📁 Project Structure
-bash
-Copy
-Edit
-├── index.html         # UI layout
-├── style.css          # Responsive and clean styling
-├── script.js          # Main logic (AI, OCR, voice, input handling)
-Screenshots
-(You can include screenshots here of the form, output, and OCR working.)
-
--->✅ Future Improvements (Suggestions)
-Enable true multilingual OCR using dynamic language selection for Tesseract.js
-
-Add offline support using service workers
-
-Improve UI for mobile users
-
-Add real medicine database validation
-
--->📜 License
-This project is released under the MIT License.
-Free to use, modify, and distribute.
-
--->👩‍⚕️ Disclaimer
-Medico is not a certified medical diagnostic tool.
-Information provided is for educational and informational purposes only.
-Always consult a licensed healthcare provider before taking any medicine.
-
-
-
+```bash
+# Or start a quick local HTTP server
+npx serve .
+```

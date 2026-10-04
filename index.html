@@ -1,55 +1,182 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.0.2/dist/tesseract.min.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Medico - Your Personalized Medical Assistant</title>
+    <title>Medico - Personalized Medical & Prescription Assistant</title>
+    <!-- Tesseract OCR fallback -->
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.0.2/dist/tesseract.min.js"></script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container">
-        <h1 class="header-title">💊 Medico - Personalized Healthcare Assistant</h1>
 
-        <div class="card">
-            <h2>Patient Profile</h2>
-            <input type="number" id="ageInput" placeholder="Enter your age..." required>
-            <select id="sexInput" required>
-                <option value="">Select your sex</option>
-                <option value="male">Male</option>
-                <option value="female">Female</option>
-                <option value="other">Other</option>
-            </select>
-            <textarea id="medicalBackground" placeholder="Enter your medical background (allergies, conditions, etc.)"></textarea>
-            <button id="saveInfoButton">Save Info</button>
-            <button id="clearInfoButton" style="background-color: #dc3545; margin-top: 10px;">Clear Info</button>
+    <!-- Header Navigation -->
+    <header class="app-header">
+        <div class="header-container">
+            <div class="logo">
+                <span class="logo-icon">💊</span>
+                <span class="logo-text">Medico</span>
+                <span class="badge">AI Health Assistant</span>
+            </div>
+            <div class="header-actions">
+                <button id="apiKeyModalBtn" class="btn btn-secondary">
+                    <span class="icon">⚙️</span> API Settings
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <div class="main-container">
+        
+        <!-- Welcome Hero Banner -->
+        <div class="hero-card">
+            <h1>Healthcare Insights in Your Language</h1>
+            <p>Upload medical reports, prescriptions, or ask health queries. Get instant simplified explanations in your preferred regional language.</p>
         </div>
 
+        <!-- 1. Patient Profile Card -->
         <div class="card">
-            <h2>Medical Query</h2>
-            <input type="text" id="queryInput" placeholder="Enter your medical query..." required>
-            <button id="queryButton">Get Medical Advice</button>
-            <div id="responseContainer"></div>
+            <div class="card-header">
+                <h2>👤 Patient Profile</h2>
+                <span class="step-tag">Step 1</span>
+            </div>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="ageInput">Age</label>
+                    <input type="number" id="ageInput" placeholder="e.g. 35" min="1" max="120" required>
+                </div>
+                <div class="form-group">
+                    <label for="sexInput">Sex</label>
+                    <select id="sexInput" required>
+                        <option value="">Select your sex</option>
+                        <option value="male">Male</option>
+                        <option value="female">Female</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div class="form-group full-width">
+                    <label for="medicalBackground">Existing Conditions / Allergies / Notes</label>
+                    <textarea id="medicalBackground" rows="2" placeholder="e.g. Diabetes, Hypertension, Allergic to Penicillin..."></textarea>
+                </div>
+            </div>
+            <div class="card-footer">
+                <button id="saveInfoButton" class="btn btn-primary">Save Profile</button>
+                <button id="clearInfoButton" class="btn btn-outline">Clear Profile</button>
+            </div>
         </div>
 
-        <hr>
-
+        <!-- 2. Medical Query & Document Upload Card -->
         <div class="card">
-            <h2>📷 Scan Tablet Backside</h2>
-            <input type="file" id="imageInput" accept="image/*">
-            <select id="languageSelect">
-                <option value="en">English</option>
-                <option value="hi">Hindi</option>
-                <option value="ta">Tamil</option>
-                <option value="te">Telugu</option>
-                <option value="bn">Bengali</option>
-            </select>
-            <button id="scanButton">Scan & Speak</button>
-            <div id="ocrResult"></div>
+            <div class="card-header">
+                <h2>📷 Scan Prescription / Medical Report</h2>
+                <span class="step-tag">Step 2</span>
+            </div>
+            
+            <!-- Upload Box -->
+            <div class="upload-area" id="uploadArea">
+                <input type="file" id="imageInput" accept="image/*" class="file-input">
+                <div class="upload-placeholder" id="uploadPlaceholder">
+                    <div class="upload-icon">📄</div>
+                    <h3>Drag & Drop Prescription / Medical Report</h3>
+                    <p>Supported: JPG, PNG, WEBP (Upload clear photo of prescription or lab result)</p>
+                    <button type="button" class="btn btn-secondary upload-btn">Browse File</button>
+                </div>
+                <div class="image-preview-container hidden" id="previewContainer">
+                    <img id="imagePreview" alt="Prescription preview">
+                    <button type="button" id="removeImageBtn" class="btn-remove">✕ Remove Image</button>
+                </div>
+            </div>
+
+            <!-- Health Question -->
+            <div class="form-group margin-top">
+                <label for="userQuery">Or Type Your Health Question / Symptoms</label>
+                <textarea id="userQuery" rows="3" placeholder="e.g. Explain what these medications are for and how to take them, or describe your symptoms..."></textarea>
+            </div>
+
+            <!-- Regional Language Selector -->
+            <div class="form-group margin-top">
+                <label for="languageSelect">🌍 Select Output Regional Language</label>
+                <select id="languageSelect" class="language-dropdown">
+                    <option value="English">English</option>
+                    <option value="Hindi (हिन्दी)">Hindi (हिन्दी)</option>
+                    <option value="Tamil (தமிழ்)">Tamil (தமிழ்)</option>
+                    <option value="Telugu (తెలుగు)">Telugu (తెలుగు)</option>
+                    <option value="Kannada (கன்னட/ಕನ್ನಡ)">Kannada (ಕನ್ನಡ)</option>
+                    <option value="Malayalam (മലയാളം)">Malayalam (മലയാളം)</option>
+                    <option value="Bengali (বাংলা)">Bengali (বাংলা)</option>
+                    <option value="Marathi (मराठी)">Marathi (मराठी)</option>
+                    <option value="Gujarati (ગુજરાતી)">Gujarati (ગુજરાતી)</option>
+                    <option value="Punjabi (ਪੰਜਾਬੀ)">Punjabi (ਪੰਜਾਬੀ)</option>
+                    <option value="Spanish">Spanish (Español)</option>
+                </select>
+            </div>
+
+            <!-- Action Button -->
+            <div class="card-footer">
+                <button id="analyzeButton" class="btn btn-accent btn-large">
+                    <span class="btn-icon">⚡</span> Analyze & Translate
+                </button>
+            </div>
+        </div>
+
+        <!-- 3. AI Analysis Results Card -->
+        <div class="card hidden" id="resultCard">
+            <div class="card-header">
+                <h2>📋 AI Medical Assessment</h2>
+                <div class="result-actions">
+                    <button id="speechBtn" class="btn btn-secondary btn-sm" title="Listen Aloud">
+                        🔊 Listen
+                    </button>
+                    <button id="copyBtn" class="btn btn-outline btn-sm" title="Copy Text">
+                        📋 Copy
+                    </button>
+                </div>
+            </div>
+
+            <!-- Loading Spinner -->
+            <div id="loadingContainer" class="loading-box hidden">
+                <div class="spinner"></div>
+                <p id="loadingStatusText">Analyzing prescription and translating to regional language...</p>
+            </div>
+
+            <!-- Output Content Area -->
+            <div id="outputContent" class="markdown-output"></div>
+
+            <div class="disclaimer-banner">
+                ⚠️ <strong>Medical Disclaimer:</strong> Medico is an AI educational assistant, not a doctor. Always consult a certified medical professional before starting, stopping, or altering any medication.
+            </div>
+        </div>
+
+    </div>
+
+    <!-- API Key Settings Modal -->
+    <div class="modal-overlay hidden" id="apiModal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3>⚙️ API Key Configuration</h3>
+                <button id="closeModalBtn" class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Medico automatically uses the <strong>Vercel Serverless proxy</strong> when deployed. If hosting directly on <strong>GitHub Pages</strong>, enter your Gemini API key below:</p>
+                <div class="form-group">
+                    <label for="customApiKey">Google Gemini API Key</label>
+                    <input type="password" id="customApiKey" placeholder="AIzaSy...">
+                </div>
+                <small>Get a free key from <a href="https://aistudio.google.com/" target="_blank">Google AI Studio</a>. Saved securely in your browser's localStorage.</small>
+            </div>
+            <div class="modal-footer">
+                <button id="saveApiKeyBtn" class="btn btn-primary">Save Key</button>
+                <button id="clearApiKeyBtn" class="btn btn-outline">Remove Key</button>
+            </div>
         </div>
     </div>
 
-    <div id="toast" class="hidden"></div>
+    <!-- Toast Notification -->
+    <div id="toast" class="toast hidden"></div>
 
     <script src="script.js"></script>
 </body>
