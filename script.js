@@ -286,19 +286,24 @@ async function callGeminiAPI(contentsArray) {
                 lastErrorMessage = resJson.error?.message || `Model ${model} failed`;
                 console.warn(`Model ${model} error:`, lastErrorMessage);
                 // If key is invalid or unauthenticated, pop open modal immediately
-                if (resJson.error?.status === "UNAUTHENTICATED" || resJson.error?.message?.includes("API key") || resJson.error?.code === 400) {
+                if (resJson.error?.status === "UNAUTHENTICATED" || resJson.error?.message?.includes("API key")) {
+                    localStorage.removeItem("MEDICO_GEMINI_KEY");
+                    customApiKey.value = "";
                     apiModal.classList.remove("hidden");
-                    throw new Error("🔑 Your API key is expired or invalid. Please paste a fresh free key in the API Settings modal above.");
+                    throw new Error("🔑 Saved API key is invalid or expired. Please paste a fresh free key from Google AI Studio in the modal above.");
                 }
             }
         } catch (err) {
             lastErrorMessage = err.message;
-            if (err.message.includes("API key")) throw err;
+            if (err.message.includes("API key") || err.message.includes("Saved API key")) throw err;
         }
     }
 
+    // If all models failed with 404, it means the API key is expired/invalid
+    localStorage.removeItem("MEDICO_GEMINI_KEY");
+    customApiKey.value = "";
     apiModal.classList.remove("hidden");
-    throw new Error("🔑 Your API Key has expired or is invalid. Please paste a fresh free API key from Google AI Studio into the API Settings modal.");
+    throw new Error("🔑 Your saved API key has expired or is invalid. The API Settings modal has opened — please paste a fresh free API key from Google AI Studio.");
 }
 
 // --- 5. TEXT-TO-SPEECH (REGIONAL VOICE READOUT) ---
