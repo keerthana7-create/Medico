@@ -265,8 +265,7 @@ async function callGeminiAPI(contentsArray) {
         "gemini-1.5-flash-latest",
         "gemini-1.5-pro-latest",
         "gemini-1.5-flash",
-        "gemini-1.5-pro",
-        "gemini-pro"
+        "gemini-1.5-pro"
     ];
 
     let lastErrorMessage = "";
@@ -286,19 +285,20 @@ async function callGeminiAPI(contentsArray) {
             } else {
                 lastErrorMessage = resJson.error?.message || `Model ${model} failed`;
                 console.warn(`Model ${model} error:`, lastErrorMessage);
-                // If key is invalid, don't keep trying models
-                if (resJson.error?.status === "UNAUTHENTICATED" || resJson.error?.message?.includes("API key")) {
+                // If key is invalid or unauthenticated, pop open modal immediately
+                if (resJson.error?.status === "UNAUTHENTICATED" || resJson.error?.message?.includes("API key") || resJson.error?.code === 400) {
                     apiModal.classList.remove("hidden");
-                    throw new Error("API Key invalid or expired. Please enter a fresh key in API Settings.");
+                    throw new Error("🔑 Your API key is expired or invalid. Please paste a fresh free key in the API Settings modal above.");
                 }
             }
         } catch (err) {
             lastErrorMessage = err.message;
-            if (err.message.includes("API Key invalid")) throw err;
+            if (err.message.includes("API key")) throw err;
         }
     }
 
-    throw new Error(lastErrorMessage || "Failed to reach Gemini models. Please verify your API key in API Settings.");
+    apiModal.classList.remove("hidden");
+    throw new Error("🔑 Your API Key has expired or is invalid. Please paste a fresh free API key from Google AI Studio into the API Settings modal.");
 }
 
 // --- 5. TEXT-TO-SPEECH (REGIONAL VOICE READOUT) ---
